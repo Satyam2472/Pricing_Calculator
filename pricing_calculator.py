@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-from streamlit_lottie import st_lottie
+# from streamlit_lottie import st_lottie
 import requests
 
 # Load data for flipakrt
@@ -188,13 +188,13 @@ def calculate_sp(row, platform):
 # Streamlit UI
 st.set_page_config(page_title="Nexten Pricing Calculator", page_icon=":moneybag:", layout="wide")
 
-def load_lottie_url(url):
-    r = requests.get(url)
-    if r.status_code != 200:
-        return None
-    return r.json()
+# def load_lottie_url(url):
+#     r = requests.get(url)
+#     if r.status_code != 200:
+#         return None
+#     return r.json()
 
-lottie_icon = load_lottie_url("https://lottie.host/94b04dc4-9475-4a8d-9c94-9ce757defaf4/6yOlZmefOI.json")
+# lottie_icon = load_lottie_url("https://lottie.host/94b04dc4-9475-4a8d-9c94-9ce757defaf4/6yOlZmefOI.json")
 
 with st.container():
     st.image("nexten.png", width=100)  # Nexten Logo
@@ -231,4 +231,5 @@ with st.container():
                 )
 
     with right_column:
-        st_lottie(lottie_icon, height=300, key="e_commerce")
+        # Display an image from a file
+        st.image('ecom.jpg')
