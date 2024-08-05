@@ -205,6 +205,9 @@ def calculate_sp(row, platform):
             abs_ads = current_sp * row['Ads']
             net_sp = current_sp * (1 - row['RTO'] - row['RVP']) / (1 + row['GST'])
 
+        return current_sp
+    
+    
     # For Meesho
     elif platform == 'Meesho':
         current_sp = row['MRP'] + row['Shipping']
