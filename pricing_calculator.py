@@ -130,19 +130,27 @@ def shipping_fee_amazon(platform, size_brand, seller_tier, fullfillment_type, lo
 
 # Define functions for Jiomart
 def fixed_fee_jiomart(category):
-    return fixed_fee_flipkart(category)
+    pass
 
 def commission_fee_jiomart(price):
-    return commission_fee_flipkart(price)
+    pass
 
 def shipping_fee_jiomart(local, zonal, national, weight):
-    return shipping_fee_flipkart(local, zonal, national, weight)
+    pass
 
 def reverse_ship_fee_jiomart(local, zonal, national, weight):
-    return reverse_ship_fee_flipkart(local, zonal, national, weight)
+    pass
+
+def pick_pack_fee_jiomart():
+    pass
+
+    
+
 
 # Calculate SP function
 def calculate_sp(row, platform):
+
+    # For Flipkart
     if platform == 'Flipkart':
         current_sp = row['MRP']
         net_sp = current_sp * (1 - row['RTO'] - row['RVP']) / (1 + row['GST'])
@@ -161,6 +169,7 @@ def calculate_sp(row, platform):
 
         return current_sp
     
+    # For Amazon
     elif platform == 'Amazon':
         current_sp = row['MRP']
         net_sp = current_sp * (1 - row['RTO'] - row['RVP']) / (1 + row['GST'])
@@ -179,11 +188,54 @@ def calculate_sp(row, platform):
         
         return current_sp
 
+    # For JioMart (This is still pending)
     elif platform == 'Jiomart':
-        pass
+        current_sp = row['MRP']
+        net_sp = current_sp * (1 - row['RTO'] - row['RVP']) / (1 + row['GST'])
+        abs_ads = current_sp * row['Ads']
+        pre_set = 1e9
 
+        while pre_set > row['Expected Settlement'] and pre_set - row['Expected Settlement'] > 0.5:
+            pre_set = (net_sp - (1 - row['RTO'] - row['RVP']) * commission_fee_jiomart(row['Platform'], row['Vertical'], row['Fullfillment Type'], current_sp) - 
+                       (1 - row['RTO']) * (fixed_fee_jiomart(row['Fullfillment Type'], row['Seller Tier']) + shipping_fee_flipkart(row['Local'], row['Zonal'], row['National'], row['Weight'], row['Platform'], row['Seller Tier'], row['Fullfillment Type'])) - 
+                       reverse_ship_fee_jiomart(row['Local'], row['Zonal'], row['National'], row['Weight']) * row['RVP'] - 
+                       abs_ads * (1 - row['RTO'] - row['RVP']) - pick_pack_fee_jiomart()) / (1 - row['RTO'] - row['RVP'])
+    
+            current_sp = current_sp - (pre_set - row['Expected Settlement']) / 2
+            abs_ads = current_sp * row['Ads']
+            net_sp = current_sp * (1 - row['RTO'] - row['RVP']) / (1 + row['GST'])
+
+    # For Meesho
     elif platform == 'Meesho':
-        pass
+        current_sp = row['MRP'] + row['Shipping']
+        net_sp = current_sp * (1 - row['RTO'] - row['RVP']) / (1 + row['GST'])
+        abs_ads = current_sp * row['Ads']
+        pre_set = 1e9
+        
+
+        if (row['Platform'] == "Mall"):
+# What I need in the excel sheet ?
+# MRP, Shipping, RTO, RVP, Ops, Ads(%), GST, Expected Settlement
+
+            while (pre_set > row['Expected Settlement'] and pre_set - row['Expected Settlement'] > 0.5):
+                pre_set = (net_sp - row['Shipping']/1.18 - current_sp*0.05 - abs_ads - row['Ops'])
+
+                current_sp = current_sp - (pre_set - row['Expected Settlement']) / 2
+                abs_ads = current_sp * row['Ads']
+                net_sp = current_sp * (1 - row['RTO'] - row['RVP']) / (1 + row['GST'])
+                
+
+        elif (row['Platform'] == "MP"):
+
+            while (pre_set > row['Expected Settlement'] and pre_set - row['Expected Settlement'] > 0.5):
+                pre_set = (net_sp - row['Shipping']/1.18 - current_sp*0.00 - abs_ads - row['Ops'])
+
+                current_sp = current_sp - (pre_set - row['Expected Settlement']) / 2
+                abs_ads = current_sp * row['Ads']
+                net_sp = current_sp * (1 - row['RTO'] - row['RVP']) / (1 + row['GST'])
+
+
+        return current_sp
 
 # Streamlit UI
 st.set_page_config(page_title="Nexten Pricing Calculator", page_icon=":moneybag:", layout="wide")
@@ -200,6 +252,18 @@ with st.container():
     st.image("nexten.png", width=100)  # Nexten Logo
 
     st.title("Nexten Pricing Calculator")
+
+# CSS
+# st.markdown("""
+#     <style>
+#     .stSelectbox, .stFileUploader {
+#         border: 2px solid black !important;
+#         padding: 5px !important;
+#         border-radius: 5px;
+#     }
+#     </style>
+# """, unsafe_allow_html=True)
+
 
 with st.container():
     left_column, right_column = st.columns((2, 1))
